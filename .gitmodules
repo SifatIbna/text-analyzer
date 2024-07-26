@@ -1,3 +1,6 @@
 [submodule "api-gateway"]
 	path = api-gateway
 	url = git@github.com:SifatIbna/api-gateway.git
+[submodule "fast-auth-server"]
+	path = fast-auth-server
+	url = git@github.com:SifatIbna/fast-auth-server.git
