@@ -1,0 +1,3 @@
+[submodule "api-gateway"]
+	path = api-gateway
+	url = git@github.com:SifatIbna/api-gateway.git
