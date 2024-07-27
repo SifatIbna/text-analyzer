@@ -1,12 +1,15 @@
-version: '3.8'
-
 services:
   nginx:
-    build: ./nginx
+    container_name: api-gateway-nginx
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
     ports:
       - "80:80"
-    depends_on:
-      - text-analyzer-api
+    volumes:
+      - ./:/etc/nginx/
+      - ./logs:/var/log/nginx
+    restart: unless-stopped
 
   text-analyzer-api:
     build: ./text-analyzer-api
@@ -14,16 +17,11 @@ services:
       - PORT=3000
       - MONGODB_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo:27017/${MONGO_DB}?authSource=admin
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
-      - KEYCLOAK_URL=http://keycloak:8080
-      - KEYCLOAK_REALM=${KEYCLOAK_REALM}
-      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
-    volumes:
-      - keycloak_secrets:/tmp/keycloak_secrets:ro
+
     depends_on:
       - mongo
       - redis
-      - keycloak-initializer
-    command: sh -c "export KEYCLOAK_CLIENT_SECRET=$$(cat /tmp/keycloak_secrets/keycloak_secrets | grep KEYCLOAK_CLIENT_SECRET | cut -d '=' -f2) && npm start"
+    command: sh -c "npm start"
 
   mongo:
     image: mongo:4.4
@@ -34,7 +32,7 @@ services:
       - mongo-data:/data/db
 
   redis:
-    image: redis:6-alpine
+    image: redis:latest
     command: redis-server --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis-data:/data

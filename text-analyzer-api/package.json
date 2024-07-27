@@ -2,9 +2,9 @@
   "name": "text-analyzer-api",
   "version": "1.0.0",
   "description": "Text Analyzer API",
-  "main": "dist/server.js",
+  "main": "src/server.ts",
   "scripts": {
-    "start": "node -r tsconfig-paths/register dist/server.js",
+    "start": "ts-node -r tsconfig-paths/register src/server.ts",
     "dev": "ts-node -r tsconfig-paths/register src/server.ts",
     "build": "tsc && tsc-alias"
   },
