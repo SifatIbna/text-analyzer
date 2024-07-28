@@ -4,7 +4,8 @@ import { TextService } from '@services/textService';
 export const createText = async (req: Request, res: Response) => {
   try {
     const { content } = req.body;
-    const userId = (req as any).user.sub;
+    const userId = req.params.id;
+    console.log(userId)
     const text = await TextService.createText(content, userId);
     res.status(201).json(text);
   } catch (error) {

@@ -4,16 +4,22 @@ import { createText, getText, updateText, deleteText, getTextAnalysis } from '..
 
 const router = express.Router();
 
-router.use(authenticateToken);
+// router.use(authenticateToken);
 
 /**
  * @swagger
- * /api/texts:
+ * /api/texts/{id}:
  *   post:
  *     summary: Create a new text
  *     tags: [Texts]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
  *     requestBody:
  *       required: true
  *       content:
@@ -37,7 +43,7 @@ router.use(authenticateToken);
  *       401:
  *         description: Unauthorized
  */
-router.post('/texts', createText);
+router.post('/texts/:id', createText);
 
 /**
  * @swagger

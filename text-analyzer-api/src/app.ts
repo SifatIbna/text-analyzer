@@ -29,7 +29,7 @@ const swaggerOptions: swaggerJsdoc.Options = {
             default: 'http'
           },
           hostname: {
-            default: 'localhost'
+            default: '0.0.0.0'
           },
           port: {
             default: process.env.PORT || '3000'
@@ -60,6 +60,9 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Routes
 app.use('/auth', authRoutes);
 app.use('/api', apiRoutes);
+app.get('/', (req, res) => {
+  res.send('Hello, World!');
+});
 
 // Error handling
 app.use(errorHandler);

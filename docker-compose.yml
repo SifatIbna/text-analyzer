@@ -7,17 +7,71 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./:/etc/nginx/
-      - ./logs:/var/log/nginx
+      - ./api-gateway:/etc/nginx/
+      - ./api-gateway/logs:/var/log/nginx
     restart: unless-stopped
+    # command: >
+    #   sh -c "nginx -t && nginx -g 'daemon off;'"
+
+  db:
+    image: postgres
+    container_name: postgres_container
+    restart: always
+    volumes:
+      - ./fast-auth-server/db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    env_file:
+      - ./fast-auth-server/docker.env
+      - ./fast-auth-server/db.env
+    # environment:    #Replace with .env file in production/deployment
+    #   - POSTGRES_DB = ${DB_NAME:-user_db}
+    #   - POSTGRES_USER = ${DB_USER:-demo_user}
+    #   - POSTGRES_PASSWORD = ${DB_PASSWORD:-demo_password}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+  
+  auth-server:
+    build:
+      context: ./fast-auth-server
+    image: fast_auth    #docker compose built image name
+    container_name: fast_auth_container
+    restart: always
+    command: bash -c "alembic stamp head && alembic upgrade head && uvicorn app.app:app --host 0.0.0.0 --port ${AUTH_PORT:-6969} --log-level info"   # Use --reload for auto reloading after code change during development
+    volumes:
+      - ./fast-auth-server:/server_app   #Only for development :: Remove this volume while deploying and instead COPY all with Dockerfile and docker build
+      # - fast-auth-server/.venv/    #Don't include .venv in the container; only for local intellisense purposes
+      # - fast-auth-server/.linuxvenv/    #Don't include .venv in the container; only for local intellisense purposes
+      # - fast-auth-server/dev/null:/server_app/.env  #Don't sync the local .env file to volume
+    ports:
+      - "${AUTH_PORT:-6969}:${AUTH_PORT:-6969}"
+    env_file:
+      - ./fast-auth-server/docker.env
+      - ./fast-auth-server/server.env
+    # environment:    #Replace with .env file in production/deployment
+    #   - DB_NAME = ${DB_NAME:-user_db}
+    #   - DB_USER = ${DB_USER:-demo_user}
+    #   - DB_PASSWORD = ${DB_PASSWORD:-demo_password}
+    #   - FROM_DOCKER = ${FROM_DOCKER:-True}    #Keep it False in local .env file
+    #   - JWT_SECRET_KEY = ${JWT_SECRET_KEY:-somekey}
+    #   - SUPERUSER_PASSWORD = ${SUPERUSER_PASSWORD:-demo_adminpassword}
+    depends_on:
+      db:
+        condition: service_healthy
 
   text-analyzer-api:
     build: ./text-analyzer-api
     environment:
-      - PORT=3000
+      - PORT=${PORT}
       - MONGODB_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo:27017/${MONGO_DB}?authSource=admin
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
-
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./text-analyzer-api:/usr/src/app
     depends_on:
       - mongo
       - redis
