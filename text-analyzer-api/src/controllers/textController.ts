@@ -1,11 +1,20 @@
 import { Request, Response } from 'express';
 import { TextService } from '@services/textService';
+import {AuthenticatedRequest} from '@middleware/authMiddleware';
 
-export const createText = async (req: Request, res: Response) => {
+export const createText = async (req: AuthenticatedRequest, res: Response) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
     const { content } = req.body;
-    const userId = req.params.id;
-    console.log(userId)
+    const userId = req.user.sub;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID not found in token' });
+    }
+
     const text = await TextService.createText(content, userId);
     res.status(201).json(text);
   } catch (error) {
